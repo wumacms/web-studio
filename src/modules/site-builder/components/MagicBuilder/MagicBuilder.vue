@@ -119,7 +119,7 @@ const startGeneration = async () => {
 
     const siteId = await siteTemplateApi.createSiteFromTemplate(
       aiResult.templateId, 
-      `AI: ${userPrompt.value.slice(0, 20)}...`,
+      aiResult.siteName,
       token,
       aiResult.content
     )

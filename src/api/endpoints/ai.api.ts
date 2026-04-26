@@ -25,7 +25,7 @@ export const aiApi = {
     ].map(url => `${url}&${query}`)
   },
 
-  async generateSiteStructure(prompt: string): Promise<{ templateId: string, content: Record<string, any> }> {
+  async generateSiteStructure(prompt: string): Promise<{ siteName: string, templateId: string, content: Record<string, any> }> {
     const { data, error } = await supabase.functions.invoke('ai-site-builder', {
       body: { prompt }
     })
