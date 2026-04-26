@@ -76,7 +76,7 @@ export const useAuthStore = defineStore('auth', () => {
       provider: 'github',
       options: {
         redirectTo: `${window.location.origin}${import.meta.env.BASE_URL}`,
-        scopes: 'repo delete_repo'
+        scopes: 'repo'
       }
     })
     if (error) throw error

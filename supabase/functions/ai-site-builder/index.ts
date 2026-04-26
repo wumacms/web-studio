@@ -57,7 +57,6 @@ Deno.serve(async (req) => {
             Return ONLY a valid JSON object. 
             The structure must match:
             {
-              "siteName": "A creative, short and catchy name for the website based on the prompt",
               "templateId": "The EXACT UUID of the selected template",
               "content": {
                 "section-id": { "field": "value", ... }

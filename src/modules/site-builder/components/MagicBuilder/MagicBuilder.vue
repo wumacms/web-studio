@@ -84,7 +84,6 @@ import { useRouter } from 'vue-router'
 import { Wand2, Sparkles } from 'lucide-vue-next'
 import { aiApi } from '@/api/endpoints/ai.api'
 import { siteTemplateApi } from '@/api/endpoints/site-template.api'
-import { supabase } from '@/api/supabase/client'
 
 const router = useRouter()
 
@@ -104,23 +103,9 @@ const startGeneration = async () => {
     
     // 2. Create Site from Template with AI Content
     currentStatus.value = 'Designing your pages...'
-    
-    // Fetch GitHub Token if available
-    let token = ''
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('github_token')
-        .eq('id', user.id)
-        .single()
-      token = data?.github_token || ''
-    }
-
     const siteId = await siteTemplateApi.createSiteFromTemplate(
       aiResult.templateId, 
-      aiResult.siteName,
-      token,
+      `AI: ${userPrompt.value.slice(0, 20)}...`,
       aiResult.content
     )
     

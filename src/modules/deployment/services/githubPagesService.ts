@@ -4,10 +4,17 @@ import { blockApi } from '@/api/endpoints/block.api'
 import { siteGlobalsApi } from '@/api/endpoints/site-globals.api'
 import Handlebars from 'handlebars'
 
-export const slugify = (_text: string) => {
-  // Generate a random 8-character alphanumeric string
-  const randomStr = Math.random().toString(36).substring(2, 10)
-  return `web-studio-${randomStr}`
+export const slugify = (text: string) => {
+  let base = text.toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/--+/g, '-')
+    .trim()
+  
+  if (base.length < 2) {
+    base = Math.random().toString(36).substring(2, 7)
+  }
+  return `web-studio-${base}`
 }
 
 export type DeployStep = 'creating-repo' | 'pushing-files' | 'enabling-pages'
@@ -17,10 +24,48 @@ export const githubPagesService = {
     console.log('Starting deployment for repo:', repoName)
     const octokit = new Octokit({ auth: token })
     
-    // 1. Create or get repo
+    // 1. Get user info
+    let owner: string
+    try {
+      const { data: user } = await octokit.users.getAuthenticated()
+      owner = user.login
+      console.log('Authenticated as:', owner)
+    } catch (e: any) {
+      console.error('Failed to get authenticated user:', e)
+      throw new Error('GitHub authentication failed. Please check your token.')
+    }
+
+    // 2. Create or get repo
     if (onStep) onStep('creating-repo')
-    const { repo, owner } = await this.createRepo(token, repoName)
-    console.log('Repo ready:', repo.html_url)
+    let repo: any
+    try {
+      console.log('Checking if repo exists...')
+      const { data } = await octokit.repos.get({ owner, repo: repoName })
+      repo = data
+      console.log('Repo found:', repo.html_url)
+    } catch (e: any) {
+      if (e.status === 404) {
+        console.log('Repo not found, creating new repo...')
+        try {
+          const { data } = await octokit.repos.createForAuthenticatedUser({
+            name: repoName,
+            description: 'Deployed with Web Studio AI',
+            auto_init: true
+          })
+          repo = data
+          console.log('Repo created:', repo.html_url)
+          
+          // Wait a bit for GitHub to initialize the repo
+          await new Promise(resolve => setTimeout(resolve, 2000))
+        } catch (createErr: any) {
+          console.error('Failed to create repo:', createErr)
+          throw new Error(`Failed to create repository: ${createErr.message}`)
+        }
+      } else {
+        console.error('Error fetching repo:', e)
+        throw e
+      }
+    }
 
     // 3. Generate static files
     console.log('Generating files...')
@@ -64,8 +109,6 @@ export const githubPagesService = {
         repo_name: repoName,
         repo_url: repoUrl,
         pages_url: pagesUrl,
-        repo_id: repo.id.toString(),
-        repo_full_name: repo.full_name,
         published: true
       })
       console.log('Database updated')
@@ -80,87 +123,16 @@ export const githubPagesService = {
     }
   },
 
-  async createRepo(token: string, repoName: string) {
+  async deleteRepo(token: string, repoName: string) {
     const octokit = new Octokit({ auth: token })
-    
-    // 1. Get user info
-    let owner: string
     try {
       const { data: user } = await octokit.users.getAuthenticated()
-      owner = user.login
-    } catch (e: any) {
-      throw new Error('GitHub authentication failed. Please check your token.')
-    }
-
-    // 2. Create or get repo
-    let repo: any
-    try {
-      const { data } = await octokit.repos.get({ owner, repo: repoName })
-      repo = data
-    } catch (e: any) {
-      if (e.status === 404) {
-        try {
-          const { data } = await octokit.repos.createForAuthenticatedUser({
-            name: repoName,
-            description: 'Created with Web Studio AI',
-            auto_init: true
-          })
-          repo = data
-          // Wait a bit for GitHub to initialize the repo
-          await new Promise(resolve => setTimeout(resolve, 2000))
-        } catch (createErr: any) {
-          throw new Error(`Failed to create repository: ${createErr.message}`)
-        }
-      } else {
-        throw e
-      }
-    }
-
-    return { repo, owner }
-  },
-
-  async deleteRepo(token: string, repoIdOrName: string) {
-    const octokit = new Octokit({ auth: token })
-    try {
-      let owner: string
-      let repoName: string
-
-      // Check if the input is a numeric ID (as a string)
-      const isId = /^\d+$/.test(repoIdOrName)
-
-      if (isId) {
-        console.log(`Fetching repo details for ID: ${repoIdOrName}`)
-        const { data: repo } = await octokit.request('GET /repositories/{id}', {
-          id: repoIdOrName
-        })
-        owner = repo.owner.login
-        repoName = repo.name
-      } else {
-        // Fallback: Assume it's a repo name and get current user as owner
-        console.log(`Using repo name fallback: ${repoIdOrName}`)
-        const { data: user } = await octokit.users.getAuthenticated()
-        owner = user.login
-        repoName = repoIdOrName
-      }
-      
-      console.log(`Deleting repo: ${owner}/${repoName}`)
       await octokit.repos.delete({
-        owner,
+        owner: user.login,
         repo: repoName
       })
-      console.log(`Successfully deleted GitHub repo: ${owner}/${repoName}`)
-    } catch (e: any) {
+    } catch (e) {
       console.error('Failed to delete GitHub repo:', e)
-      
-      // Handle specific 403 error for missing 'delete_repo' scope
-      if (e.status === 403) {
-        throw new Error('Your GitHub token lacks the "delete_repo" scope. Please enable it in your GitHub Personal Access Token settings.')
-      }
-
-      // If it's already deleted (404), we consider it a success
-      if (e.status !== 404) {
-        throw new Error(`Failed to delete GitHub repository: ${e.message}`)
-      }
     }
   },
 
