@@ -158,6 +158,12 @@ export const githubPagesService = {
       console.log(`Successfully deleted GitHub repo: ${owner}/${repoName}`)
     } catch (e: any) {
       console.error('Failed to delete GitHub repo:', e)
+      
+      // Handle specific 403 error for missing 'delete_repo' scope
+      if (e.status === 403) {
+        throw new Error('Your GitHub token lacks the "delete_repo" scope. Please enable it in your GitHub Personal Access Token settings.')
+      }
+
       // If it's already deleted (404), we consider it a success
       if (e.status !== 404) {
         throw new Error(`Failed to delete GitHub repository: ${e.message}`)
