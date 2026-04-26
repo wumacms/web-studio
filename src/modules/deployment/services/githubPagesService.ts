@@ -4,17 +4,10 @@ import { blockApi } from '@/api/endpoints/block.api'
 import { siteGlobalsApi } from '@/api/endpoints/site-globals.api'
 import Handlebars from 'handlebars'
 
-export const slugify = (text: string) => {
-  let base = text.toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/--+/g, '-')
-    .trim()
-  
-  if (base.length < 2) {
-    base = Math.random().toString(36).substring(2, 7)
-  }
-  return `web-studio-${base}`
+export const slugify = (_text: string) => {
+  // Generate a random 8-character alphanumeric string
+  const randomStr = Math.random().toString(36).substring(2, 10)
+  return `web-studio-${randomStr}`
 }
 
 export type DeployStep = 'creating-repo' | 'pushing-files' | 'enabling-pages'
