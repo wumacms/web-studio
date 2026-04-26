@@ -12,7 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function syncProfile() {
     if (!session.value || !user.value) return
-    
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
@@ -50,7 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
         const { data } = await supabase.auth.getSession()
         session.value = data.session
         user.value = data.session?.user ?? null
-        
+
         if (session.value) await syncProfile()
       } catch (error) {
         console.error('Auth initialization error:', error)
