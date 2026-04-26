@@ -143,5 +143,5 @@ const handleMove = (id: string, direction: 'up' | 'down') => {
   else if (direction === 'down' && index < editorStore.blockInstances.length - 1) editorStore.moveBlock(index, index + 1)
 }
 const handleSave = async () => { try { await editorStore.saveChanges() } catch (e) { alert('Failed to save') } }
-const openPreview = () => { window.open(`/preview/${siteId}/${pageId}?lang=${editorStore.currentLocale}`, '_blank') }
+const openPreview = () => { window.open(`${import.meta.env.BASE_URL}preview/${siteId}/${pageId}?lang=${editorStore.currentLocale}`, '_blank') }
 </script>

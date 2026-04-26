@@ -288,7 +288,7 @@ const openEditor = (siteId: string) => {
 }
 
 const handlePreview = (siteId: string) => {
-  window.open(`/preview/${siteId}`, '_blank')
+  window.open(`${import.meta.env.BASE_URL}preview/${siteId}`, '_blank')
 }
 
 

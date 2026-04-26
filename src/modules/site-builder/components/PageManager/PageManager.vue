@@ -370,6 +370,6 @@ const goToEditor = (pageId: string) => {
 }
 
 const openPreview = (pageId: string) => {
-  window.open(`/preview/${siteId}/${pageId}`, '_blank')
+  window.open(`${import.meta.env.BASE_URL}preview/${siteId}/${pageId}`, '_blank')
 }
 </script>
