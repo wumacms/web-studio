@@ -167,15 +167,11 @@ const route = useRoute()
 const router = useRouter()
 
 // 监听路径变化，强制刷新并同步状态
-// 监听路径和参数变化，同步状态并请求数据
-watch(() => [route.path, route.params.type], ([path, type]) => {
-  if ((path as string).startsWith('/marketplace')) {
-    const typeFromPath = (type as string) || 'block'
-    const newType = typeFromPath.toUpperCase() as any
-    
-    // 只有当类型确实改变了，或者当前没有数据时才触发获取
-    marketStore.currentType = newType
-    console.log('[Debug] Marketplace navigation detected:', { path, type: newType })
+watch(() => route.path, (path) => {
+  if (path.startsWith('/marketplace')) {
+    const typeFromPath = route.params.type as string || 'block'
+    marketStore.currentType = typeFromPath.toUpperCase() as any
+    console.log('[Debug] Marketplace path sync:', marketStore.currentType)
     marketStore.fetchItems()
   }
 }, { immediate: true })
@@ -184,8 +180,6 @@ watch(() => [route.path, route.params.type], ([path, type]) => {
 onMounted(() => {
   if (!route.params.type) {
     router.replace('/marketplace/block')
-  } else if (marketStore.items.length === 0) {
-    marketStore.fetchItems()
   }
 })
 

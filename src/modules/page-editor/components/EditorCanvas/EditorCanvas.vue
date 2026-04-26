@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useEditorStore } from '../../stores/editorStore'
 import { Plus, Monitor, Smartphone, Save, ChevronLeft, Loader2, Eye, Undo2, Redo2 } from 'lucide-vue-next'
@@ -100,8 +100,8 @@ import { siteGlobalsApi } from '@/api/endpoints/site-globals.api'
 const route = useRoute()
 const editorStore = useEditorStore()
 const isDraggingOver = ref(false)
-const siteId = computed(() => route.params.siteId as string)
-const pageId = computed(() => route.params.pageId as string)
+const siteId = route.params.siteId as string
+const pageId = route.params.pageId as string
 
 const handleKeyDown = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
@@ -110,23 +110,19 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('keydown', handleKeyDown)
-})
-
-watch(() => pageId.value, async (newPageId: string) => {
-  if (newPageId) {
-    const globals = await siteGlobalsApi.getGlobals(siteId.value)
-    if (globals?.i18n_config) {
-      editorStore.setEnabledLocales(globals.i18n_config.enabled || ['en'])
-      editorStore.setLocale(globals.i18n_config.primary || 'en')
-    }
-
-    const { data: pageData } = await supabase.from('pages').select('*').eq('id', newPageId).single()
-    if (pageData) editorStore.setPage(pageData)
-    await editorStore.loadPageData(newPageId)
+  
+  const globals = await siteGlobalsApi.getGlobals(siteId)
+  if (globals?.i18n_config) {
+    editorStore.setEnabledLocales(globals.i18n_config.enabled || ['en'])
+    editorStore.setLocale(globals.i18n_config.primary || 'en')
   }
-}, { immediate: true })
+
+  const { data: pageData } = await supabase.from('pages').select('*').eq('id', pageId).single()
+  if (pageData) editorStore.setPage(pageData)
+  await editorStore.loadPageData(pageId)
+})
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
@@ -147,5 +143,5 @@ const handleMove = (id: string, direction: 'up' | 'down') => {
   else if (direction === 'down' && index < editorStore.blockInstances.length - 1) editorStore.moveBlock(index, index + 1)
 }
 const handleSave = async () => { try { await editorStore.saveChanges() } catch (e) { alert('Failed to save') } }
-const openPreview = () => { window.open(`${import.meta.env.BASE_URL}preview/${siteId.value}/${pageId.value}?lang=${editorStore.currentLocale}`, '_blank') }
+const openPreview = () => { window.open(`${import.meta.env.BASE_URL}preview/${siteId}/${pageId}?lang=${editorStore.currentLocale}`, '_blank') }
 </script>

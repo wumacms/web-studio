@@ -218,7 +218,7 @@
 
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSiteStore } from '../../stores/siteStore'
 import { exportService } from '@/shared/services/export.service'
@@ -231,7 +231,7 @@ import type { Page } from '@/types/models/site'
 const route = useRoute()
 const router = useRouter()
 const siteStore = useSiteStore()
-const siteId = computed(() => route.params.siteId as string)
+const siteId = route.params.siteId as string
 
 const showCreateModal = ref(false)
 const showTemplateModal = ref(false)
@@ -254,12 +254,10 @@ const otherEnabledLanguages = computed(() => {
   return enabled.filter(l => l !== primary)
 })
 
-watch(() => siteId.value, async (newId: string) => {
-  if (newId) {
-    await siteStore.fetchSiteDetails(newId)
-    fetchMarketTemplates()
-  }
-}, { immediate: true })
+onMounted(async () => {
+  await siteStore.fetchSiteDetails(siteId)
+  fetchMarketTemplates()
+})
 
 const fetchMarketTemplates = async () => {
   loadingTemplates.value = true
@@ -280,8 +278,8 @@ const handleCreateFromTemplate = async (template: any) => {
 
   try {
     siteStore.loading = true
-    await pageTemplateApi.addPageToSite(template.id, siteId.value, name, path)
-    await siteStore.fetchPages(siteId.value)
+    await pageTemplateApi.addPageToSite(template.id, siteId, name, path)
+    await siteStore.fetchPages(siteId)
     showTemplateModal.value = false
     alert(`Page "${name}" created from template!`)
   } catch (error) {
@@ -329,7 +327,7 @@ const handlePublishSiteTemplate = async () => {
   const category = prompt('Enter category for this site template:', 'Business')
   if (!category) return
   try {
-    await siteStore.publishSiteAsTemplate(siteId.value, siteStore.currentSite.name, category)
+    await siteStore.publishSiteAsTemplate(siteId, siteStore.currentSite.name, category)
     alert(`Site "${siteStore.currentSite.name}" published to market!`)
   } catch (error) {
     alert('Failed to publish site template.')
@@ -340,7 +338,7 @@ const handlePublishSiteTemplate = async () => {
 const handleExport = async () => {
   exporting.value = true
   try {
-    const blob = await exportService.exportToZip(siteId.value)
+    const blob = await exportService.exportToZip(siteId)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -358,7 +356,7 @@ const handleExport = async () => {
 const handleCreatePage = async () => {
   if (!newPageName.value || !newPagePath.value) return
   try {
-    await siteStore.createPage(siteId.value, newPageName.value, newPagePath.value)
+    await siteStore.createPage(siteId, newPageName.value, newPagePath.value)
     showCreateModal.value = false
     newPageName.value = ''
     newPagePath.value = ''
@@ -368,7 +366,7 @@ const handleCreatePage = async () => {
 }
 
 const goToEditor = (pageId: string) => {
-  router.push(`/site/${siteId.value}/editor/${pageId}`)
+  router.push(`/site/${siteId}/editor/${pageId}`)
 }
 
 const openPreview = (pageId: string) => {
