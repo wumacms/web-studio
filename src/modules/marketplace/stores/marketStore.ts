@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { marketApi, MarketItemType } from '@/api/endpoints/market.api'
+import { useAuthStore } from '@/modules/auth/stores/authStore'
 import { templateApi } from '@/api/endpoints/template.api'
 import { pageTemplateApi } from '@/api/endpoints/page-template.api'
 import { siteTemplateApi } from '@/api/endpoints/site-template.api'
@@ -17,7 +18,7 @@ export const useMarketStore = defineStore('market', () => {
   async function fetchItems() {
     loading.value = true
     try {
-      const authStore = (await import('@/modules/auth/stores/authStore')).useAuthStore()
+      const authStore = useAuthStore()
       const userId = authStore.user?.id || ''
 
       const [marketItems, favs] = await Promise.all([
