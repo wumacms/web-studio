@@ -1,4 +1,5 @@
 import { supabase } from '@/api/supabase/client'
+import { githubPagesService, slugify } from '@/modules/deployment/services/githubPagesService'
 
 export interface SiteTemplate {
   id: string
@@ -30,9 +31,32 @@ export const siteTemplateApi = {
     return data || []
   },
 
-  async createSiteFromTemplate(templateId: string, siteName: string, contentOverride?: Record<string, any>): Promise<string> {
+  async createSiteFromTemplate(
+    templateId: string, 
+    siteName: string, 
+    githubToken?: string,
+    contentOverride?: Record<string, any>
+  ): Promise<string> {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
+
+    const repo_name = slugify(siteName)
+    let repo_id = ''
+    let repo_full_name = ''
+    let repo_url = ''
+
+    // 0. Create GitHub Repo first if token is available
+    if (githubToken) {
+      try {
+        const { repo } = await githubPagesService.createRepo(githubToken, repo_name)
+        repo_id = repo.id.toString()
+        repo_full_name = repo.full_name
+        repo_url = repo.html_url
+      } catch (error) {
+        console.error('Failed to create GitHub repo for template:', error)
+        throw error
+      }
+    }
 
     // 1. Get Template Details
     const { data: template, error: tplError } = await supabase
@@ -49,7 +73,11 @@ export const siteTemplateApi = {
       .insert({
         name: siteName,
         profile_id: user.id,
-        published: false
+        published: false,
+        repo_name,
+        repo_id,
+        repo_full_name,
+        repo_url
       })
       .select()
       .single()

@@ -54,14 +54,36 @@ export const useSiteStore = defineStore('site', () => {
     }
   }
 
-  async function createSite(name: string, description: string) {
+  async function createSite(name: string, description: string, githubToken?: string) {
     loading.value = true
     try {
       const repo_name = slugify(name)
-      const newSite = await siteApi.createSite({ name, description, repo_name })
+      let repo_id = ''
+      let repo_full_name = ''
+      let repo_url = ''
+
+      // 1. Create GitHub repo first if token is available
+      if (githubToken) {
+        const { repo } = await githubPagesService.createRepo(githubToken, repo_name)
+        repo_id = repo.id.toString()
+        repo_full_name = repo.full_name
+        repo_url = repo.html_url
+      }
+
+      // 2. Create site record with repo info
+      const newSite = await siteApi.createSite({ 
+        name, 
+        description, 
+        repo_name,
+        repo_id,
+        repo_full_name,
+        repo_url
+      })
+      
       sites.value.unshift(newSite)
       return newSite
     } catch (error) {
+      console.error('Failed to create site:', error)
       throw error
     } finally {
       loading.value = false
@@ -72,9 +94,10 @@ export const useSiteStore = defineStore('site', () => {
     const site = sites.value.find(s => s.id === id)
     
     // 1. Delete GitHub Repo first if it exists
-    if (githubToken && site?.repo_id) {
+    const repoIdentifier = site?.repo_id || site?.repo_name
+    if (githubToken && repoIdentifier) {
       try {
-        await githubPagesService.deleteRepo(githubToken, site.repo_id)
+        await githubPagesService.deleteRepo(githubToken, repoIdentifier)
       } catch (error) {
         console.error('Failed to delete GitHub repository:', error)
         throw error // Propagate error so we don't delete the site record if repo deletion fails

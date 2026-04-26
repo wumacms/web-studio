@@ -253,13 +253,24 @@ watch(() => route.path, (path) => {
 const handleCreateSite = async () => {
   if (!newSiteName.value) return
   try {
-    const site = await siteStore.createSite(newSiteName.value, newSiteDesc.value)
+    let token = ''
+    if (authStore.user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('github_token')
+        .eq('id', authStore.user.id)
+        .single()
+      token = data?.github_token || ''
+    }
+
+    const site = await siteStore.createSite(newSiteName.value, newSiteDesc.value, token)
     showCreateModal.value = false
     newSiteName.value = ''
     newSiteDesc.value = ''
     router.push(`/site/${site.id}/dashboard`)
   } catch (error) {
-    alert('Failed to create site.')
+    console.error('Create site error:', error)
+    alert('Failed to create site and GitHub repository.')
   }
 }
 
@@ -267,9 +278,20 @@ const handleCreateFromTemplate = async (template: any) => {
   const name = prompt(`Enter a name for your new ${template.name}:`, `My ${template.name}`)
   if (!name) return
   try {
-    const siteId = await siteTemplateApi.createSiteFromTemplate(template.id, name)
+    let token = ''
+    if (authStore.user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('github_token')
+        .eq('id', authStore.user.id)
+        .single()
+      token = data?.github_token || ''
+    }
+
+    const siteId = await siteTemplateApi.createSiteFromTemplate(template.id, name, token)
     router.push(`/site/${siteId}/dashboard`)
   } catch (error) {
+    console.error('Create from template error:', error)
     alert('Failed to create site from template.')
   }
 }
