@@ -109,6 +109,8 @@ export const githubPagesService = {
         repo_name: repoName,
         repo_url: repoUrl,
         pages_url: pagesUrl,
+        repo_id: repo.id.toString(),
+        repo_full_name: repo.full_name,
         published: true
       })
       console.log('Database updated')
@@ -123,16 +125,28 @@ export const githubPagesService = {
     }
   },
 
-  async deleteRepo(token: string, repoName: string) {
+  async deleteRepo(token: string, repoId: string) {
     const octokit = new Octokit({ auth: token })
     try {
-      const { data: user } = await octokit.users.getAuthenticated()
-      await octokit.repos.delete({
-        owner: user.login,
-        repo: repoName
+      // 1. Get repo details by ID to get current owner and name
+      // This is more accurate than using names which can change
+      console.log(`Fetching repo details for ID: ${repoId}`)
+      const { data: repo } = await octokit.request('GET /repositories/{id}', {
+        id: repoId
       })
-    } catch (e) {
+      
+      console.log(`Deleting repo: ${repo.full_name}`)
+      await octokit.repos.delete({
+        owner: repo.owner.login,
+        repo: repo.name
+      })
+      console.log(`Successfully deleted GitHub repo: ${repo.full_name}`)
+    } catch (e: any) {
       console.error('Failed to delete GitHub repo:', e)
+      // If it's already deleted (404), we consider it a success
+      if (e.status !== 404) {
+        throw new Error(`Failed to delete GitHub repository: ${e.message}`)
+      }
     }
   },
 

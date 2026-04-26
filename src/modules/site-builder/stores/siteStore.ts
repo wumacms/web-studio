@@ -70,10 +70,21 @@ export const useSiteStore = defineStore('site', () => {
 
   async function deleteSite(id: string, githubToken?: string) {
     const site = sites.value.find(s => s.id === id)
-    if (site?.repo_name && githubToken) {
-      await githubPagesService.deleteRepo(githubToken, site.repo_name)
+    
+    // 1. Delete GitHub Repo first if it exists
+    if (githubToken && site?.repo_id) {
+      try {
+        await githubPagesService.deleteRepo(githubToken, site.repo_id)
+      } catch (error) {
+        console.error('Failed to delete GitHub repository:', error)
+        throw error // Propagate error so we don't delete the site record if repo deletion fails
+      }
     }
+    
+    // 2. Delete site record from database
     await siteApi.deleteSite(id)
+    
+    // 3. Update local state
     sites.value = sites.value.filter(s => s.id !== id)
   }
 

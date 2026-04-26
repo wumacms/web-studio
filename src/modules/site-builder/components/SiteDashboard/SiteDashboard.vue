@@ -150,6 +150,13 @@
       :site-name="selectedSite.name" 
       @close="showPublishModal = false" 
     />
+    <DeleteSiteModal
+      v-if="showDeleteModal && selectedSite"
+      :site-name="selectedSite.name"
+      :deleting="isDeleting"
+      @close="showDeleteModal = false"
+      @confirm="handleExecuteDelete"
+    />
 
     <!-- Create Site Modal (Blank) -->
     <div v-if="showCreateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -210,6 +217,7 @@ import { Plus, Layout, ExternalLink, Trash2, LayoutTemplate, Wand2, Rocket, Gith
 import { siteTemplateApi } from '@/api/endpoints/site-template.api'
 import MagicBuilder from '../MagicBuilder/MagicBuilder.vue'
 import PublishModal from '../../../deployment/components/PublishModal.vue'
+import DeleteSiteModal from './DeleteSiteModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -221,6 +229,8 @@ const showCreateModal = ref(false)
 const showTemplateModal = ref(false)
 const showMagicBuilder = ref(false)
 const showPublishModal = ref(false)
+const showDeleteModal = ref(false)
+const isDeleting = ref(false)
 const selectedSite = ref<any>(null)
 const newSiteName = ref('')
 const newSiteDesc = ref('')
@@ -264,22 +274,44 @@ const handleCreateFromTemplate = async (template: any) => {
   }
 }
 
-const confirmDelete = async (site: any) => {
-  const msg = site.repo_name 
-    ? `Are you sure? This will also delete the GitHub repository "${site.repo_name}".`
-    : 'Are you sure you want to delete this site?'
-    
-  if (confirm(msg)) {
+const confirmDelete = (site: any) => {
+  selectedSite.value = site
+  showDeleteModal.value = true
+}
+
+const handleExecuteDelete = async () => {
+  if (!selectedSite.value) return
+  
+  const site = selectedSite.value
+  const isPublished = !!site.repo_id || !!site.repo_name
+  
+  isDeleting.value = true
+  try {
     let token = ''
-    if (site.repo_name && authStore.user) {
+    if (isPublished && authStore.user) {
       const { data } = await supabase
         .from('profiles')
         .select('github_token')
         .eq('id', authStore.user.id)
         .single()
       token = data?.github_token || ''
+      
+      if (!token) {
+        alert('GitHub token not found. Please reconnect your GitHub account to delete the repository.')
+        isDeleting.value = false
+        return
+      }
     }
+    
     await siteStore.deleteSite(site.id, token)
+    showDeleteModal.value = false
+    selectedSite.value = null
+    alert('Site and repository deleted successfully.')
+  } catch (error: any) {
+    console.error('Delete failed:', error)
+    alert(`Failed to delete site: ${error.message || 'Unknown error'}`)
+  } finally {
+    isDeleting.value = false
   }
 }
 
