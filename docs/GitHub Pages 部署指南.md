@@ -55,11 +55,19 @@ const router = createRouter({
 
 ---
 
-## 4. Supabase 相关配置 (可选)
+## 4. Supabase 相关配置 (关键)
 
-如果你在项目中使用了 Supabase Auth 认证功能：
+为了使 GitHub 登录和页面预览在生产环境下正常工作，必须在 Supabase Dashboard 完成以下设置：
+
 1. 前往 **Supabase Dashboard > Authentication > URL Configuration**。
-2. 在 **Redirect URLs** 中添加你的 GitHub Pages 地址（例如 `https://your-user.github.io/web-studio/`）。
+2. **Site URL**: 修改为你的 GitHub Pages 生产地址：
+   `https://<你的用户名>.github.io/web-studio/`
+3. **Redirect URLs**: 在列表中添加以下地址（带通配符）：
+   - `https://<你的用户名>.github.io/web-studio/**` (支持生产环境跳转)
+   - `http://localhost:3000/**` (支持本地开发跳转)
+
+> [!IMPORTANT]
+> 如果没有正确设置 **Site URL**，GitHub 登录后会默认跳转回 `localhost:3000`。详细排查请参考 [常见问题排查](./troubleshooting.md)。
 
 ---
 

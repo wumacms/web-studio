@@ -71,4 +71,4 @@ src/
 1. 克隆项目
 2. 安装依赖: `pnpm install`
 3. 配置 `.env`: 填写 Supabase URL 和 Anon Key
-4. 启动项目: `npm run dev`
+4. 启动项目: `pnpm run dev`
