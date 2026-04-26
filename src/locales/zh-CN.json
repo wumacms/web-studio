@@ -1,0 +1,24 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "loading": "加载中...",
+    "search": "搜索"
+  },
+  "nav": {
+    "dashboard": "仪表盘",
+    "projects": "我的项目",
+    "marketplace": "模板市场",
+    "settings": "设置"
+  },
+  "auth": {
+    "login": "登录",
+    "logout": "退出登录",
+    "signup": "注册",
+    "email": "邮箱",
+    "password": "密码"
+  }
+}

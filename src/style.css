@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-secondary: #10b981;
+  --color-accent: #f59e0b;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#app {
+  width: 100%;
+}
+
+/* Custom Scrollbar Utilities */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+  background-clip: padding-box;
+}
+
+/* Dark mode scrollbar */
+.dark .custom-scrollbar::-webkit-scrollbar-thumb,
+.bg-gray-900 .custom-scrollbar::-webkit-scrollbar-thumb,
+.bg-gray-950 .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  background-clip: padding-box;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.bg-gray-900 .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.bg-gray-950 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+  background-clip: padding-box;
+}
+
+/* Editor Canvas Typography Reset */
+.editor-canvas-reset {
+  color: #111827; /* gray-900 */
+  font-family: Inter, system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+.editor-canvas-reset h1, 
+.editor-canvas-reset h2, 
+.editor-canvas-reset h3, 
+.editor-canvas-reset h4 {
+  margin: 0;
+  font-weight: 700;
+  color: #111827;
+}
+
+.editor-canvas-reset p {
+  margin: 0;
+}
+
+.editor-canvas-reset img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
