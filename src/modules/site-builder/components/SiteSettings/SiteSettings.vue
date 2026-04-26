@@ -121,14 +121,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSiteStore } from '../../stores/siteStore'
 import { Save, Loader2, LayoutTemplate, PanelBottom, Languages } from 'lucide-vue-next'
 
 const route = useRoute()
 const siteStore = useSiteStore()
-const siteId = route.params.siteId as string
+const siteId = computed(() => route.params.siteId as string)
 const loading = ref(false)
 
 const navConfig = ref({
@@ -151,20 +151,22 @@ const translations = ref<Record<string, any>>({})
 
 const isPrimaryLocale = computed(() => currentEditLocale.value === i18nConfig.value.primary)
 
-onMounted(async () => {
-  await siteStore.fetchSiteDetails(siteId)
-  if (siteStore.currentGlobals) {
-    if (siteStore.currentGlobals.nav_config) navConfig.value = { ...navConfig.value, ...siteStore.currentGlobals.nav_config }
-    if (siteStore.currentGlobals.footer_config) footerConfig.value = { ...footerConfig.value, ...siteStore.currentGlobals.footer_config }
-    if (siteStore.currentGlobals.i18n_config) {
-      i18nConfig.value = { ...i18nConfig.value, ...siteStore.currentGlobals.i18n_config }
-      currentEditLocale.value = i18nConfig.value.primary || 'en'
-    }
-    if (siteStore.currentGlobals.translations) {
-      translations.value = { ...siteStore.currentGlobals.translations }
+watch(() => siteId.value, async (newId: string) => {
+  if (newId) {
+    await siteStore.fetchSiteDetails(newId)
+    if (siteStore.currentGlobals) {
+      if (siteStore.currentGlobals.nav_config) navConfig.value = { ...navConfig.value, ...siteStore.currentGlobals.nav_config }
+      if (siteStore.currentGlobals.footer_config) footerConfig.value = { ...footerConfig.value, ...siteStore.currentGlobals.footer_config }
+      if (siteStore.currentGlobals.i18n_config) {
+        i18nConfig.value = { ...i18nConfig.value, ...siteStore.currentGlobals.i18n_config }
+        currentEditLocale.value = i18nConfig.value.primary || 'en'
+      }
+      if (siteStore.currentGlobals.translations) {
+        translations.value = { ...siteStore.currentGlobals.translations }
+      }
     }
   }
-})
+}, { immediate: true })
 
 // Current display data based on locale
 const displayNavConfig = computed(() => {
