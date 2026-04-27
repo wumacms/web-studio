@@ -18,7 +18,7 @@
         <nav v-if="authStore.isAuthenticated" class="hidden md:flex items-center gap-8">
           <router-link to="/" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Sites</router-link>
           <router-link to="/marketplace/block" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Marketplace</router-link>
-          <router-link to="/admin/templates" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Templates</router-link>
+          <router-link v-if="authStore.isAdmin" to="/admin/templates" class="text-sm font-medium text-gray-400 hover:text-white transition-colors">Templates</router-link>
 
         </nav>
 

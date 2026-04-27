@@ -24,7 +24,7 @@
         <ChevronDown class="w-4 h-4" />
       </button>
       <div class="w-px h-4 bg-white/20 mx-1"></div>
-      <button @click.stop="handleSaveAsTemplate" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Save as Template">
+      <button v-if="authStore.isAdmin" @click.stop="handleSaveAsTemplate" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Save as Template">
         <CopyPlus class="w-4 h-4" />
       </button>
       <div class="w-px h-4 bg-white/20 mx-1"></div>
@@ -44,6 +44,7 @@ import Handlebars from 'handlebars'
 import { Trash2, ChevronUp, ChevronDown, CopyPlus } from 'lucide-vue-next'
 import type { BlockInstance } from '@/types/models/block'
 import { useEditorStore } from '../../stores/editorStore'
+import { useAuthStore } from '@/modules/auth/stores/authStore'
 
 const props = defineProps<{
   block: BlockInstance
@@ -52,6 +53,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['select', 'delete', 'move'])
 const editorStore = useEditorStore()
+const authStore = useAuthStore()
 
 const handleSaveAsTemplate = async () => {
   const name = prompt('Enter a name for this new template:', 'New Block Template')

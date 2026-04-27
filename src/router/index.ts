@@ -62,7 +62,7 @@ const router = createRouter({
     {
       path: '/admin/templates',
       component: () => import('@/modules/admin/components/TemplateManager/TemplateManager.vue'),
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
       children: [
         {
           path: '',
@@ -92,6 +92,11 @@ router.beforeEach(async (to, _from) => {
     return '/login'
   }
   if (to.meta.guestOnly && authStore.isAuthenticated) {
+    return '/'
+  }
+  
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    alert('Access Denied: Administrator permissions required.')
     return '/'
   }
 })

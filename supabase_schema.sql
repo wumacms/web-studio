@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   github_token TEXT,
   github_id TEXT,
   metadata JSONB,
+  role TEXT DEFAULT 'user',
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -141,7 +142,29 @@ ALTER TABLE public.site_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.favorites ENABLE ROW LEVEL SECURITY;
 
 -- 策略定义
-CREATE POLICY "Profiles are managed by owners" ON public.profiles FOR ALL USING (auth.uid() = id);
+-- Profiles: 允许查看个人信息，允许更新个人信息（但 role 字段由 RLS 策略保护）
+CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles 
+  FOR UPDATE 
+  USING (auth.uid() = id)
+  WITH CHECK (
+    auth.uid() = id AND 
+    (role = (SELECT p.role FROM public.profiles p WHERE p.id = auth.uid()) OR public.is_admin())
+  );
+
+-- 辅助函数：检查当前用户是否为管理员
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
+
 CREATE POLICY "Sites are managed by owners" ON public.sites FOR ALL USING (auth.uid() = profile_id);
 CREATE POLICY "Pages are managed by site owners" ON public.pages FOR ALL 
 USING (EXISTS (SELECT 1 FROM public.sites WHERE id = site_id AND profile_id = auth.uid()));
@@ -149,10 +172,18 @@ CREATE POLICY "Blocks are managed by site owners" ON public.block_instances FOR 
 USING (EXISTS (SELECT 1 FROM public.pages p JOIN public.sites s ON p.site_id = s.id WHERE p.id = page_id AND s.profile_id = auth.uid()));
 CREATE POLICY "Globals are managed by site owners" ON public.site_globals FOR ALL 
 USING (EXISTS (SELECT 1 FROM public.sites WHERE id = site_id AND profile_id = auth.uid()));
-CREATE POLICY "Templates are viewable by public or owners" ON public.block_templates FOR SELECT 
-USING (is_published = true OR auth.uid() = created_by);
-CREATE POLICY "Page templates are viewable by public or owners" ON public.page_templates FOR SELECT 
-USING (is_published = true OR auth.uid() = created_by);
-CREATE POLICY "Site templates are viewable by public or owners" ON public.site_templates FOR SELECT 
-USING (is_published = true OR auth.uid() = created_by);
+CREATE POLICY "Templates are viewable by public or admin" ON public.block_templates FOR SELECT 
+USING (is_published = true OR public.is_admin());
+CREATE POLICY "Templates are managed by admin" ON public.block_templates FOR ALL
+USING (public.is_admin());
+
+CREATE POLICY "Page templates are viewable by public or admin" ON public.page_templates FOR SELECT 
+USING (is_published = true OR public.is_admin());
+CREATE POLICY "Page templates are managed by admin" ON public.page_templates FOR ALL
+USING (public.is_admin());
+
+CREATE POLICY "Site templates are viewable by public or admin" ON public.site_templates FOR SELECT 
+USING (is_published = true OR public.is_admin());
+CREATE POLICY "Site templates are managed by admin" ON public.site_templates FOR ALL
+USING (public.is_admin());
 CREATE POLICY "Favorites are managed by owners" ON public.favorites FOR ALL USING (auth.uid() = profile_id);

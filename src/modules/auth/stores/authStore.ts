@@ -6,14 +6,16 @@ import type { Session, User } from '@supabase/supabase-js'
 export const useAuthStore = defineStore('auth', () => {
   const session = ref<Session | null>(null)
   const user = ref<User | null>(null)
+  const profile = ref<any | null>(null)
   const loading = ref(true)
 
   const isAuthenticated = computed(() => !!session.value)
+  const isAdmin = computed(() => profile.value?.role === 'admin')
 
   async function syncProfile() {
     if (!session.value || !user.value) return
 
-    const { data: profile } = await supabase
+    const { data: existingProfile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.value.id)
@@ -25,18 +27,24 @@ export const useAuthStore = defineStore('auth', () => {
     const profileData = {
       id: user.value.id,
       github_id: metadata.sub || user.value.id,
-      username: metadata.user_name || metadata.full_name || profile?.username,
+      username: metadata.user_name || metadata.full_name || existingProfile?.username,
       github_username: metadata.user_name,
       github_avatar_url: metadata.avatar_url,
       // Only update token if we have a fresh one from this session
       ...(providerToken ? { github_token: providerToken } : {})
     }
 
-    const { error: upsertError } = await supabase
+    const { data: updatedProfile, error: upsertError } = await supabase
       .from('profiles')
       .upsert(profileData)
+      .select()
+      .single()
 
-    if (upsertError) console.error('Error syncing profile:', upsertError)
+    if (upsertError) {
+      console.error('Error syncing profile:', upsertError)
+    } else {
+      profile.value = updatedProfile
+    }
   }
 
   let initializationPromise: Promise<void> | null = null
@@ -92,8 +100,10 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     session,
     user,
+    profile,
     loading,
     isAuthenticated,
+    isAdmin,
     initialize,
     signInWithGithub,
     signOut
