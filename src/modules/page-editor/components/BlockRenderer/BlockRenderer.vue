@@ -24,6 +24,10 @@
         <ChevronDown class="w-4 h-4" />
       </button>
       <div class="w-px h-4 bg-white/20 mx-1"></div>
+      <button @click.stop="handleSaveAsTemplate" class="p-1.5 hover:bg-white/20 rounded transition-colors" title="Save as Template">
+        <CopyPlus class="w-4 h-4" />
+      </button>
+      <div class="w-px h-4 bg-white/20 mx-1"></div>
       <button @click.stop="$emit('delete', block.id)" class="p-1.5 hover:bg-red-500 rounded transition-colors">
         <Trash2 class="w-4 h-4" />
       </button>
@@ -37,7 +41,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import Handlebars from 'handlebars'
-import { Trash2, ChevronUp, ChevronDown } from 'lucide-vue-next'
+import { Trash2, ChevronUp, ChevronDown, CopyPlus } from 'lucide-vue-next'
 import type { BlockInstance } from '@/types/models/block'
 import { useEditorStore } from '../../stores/editorStore'
 
@@ -48,6 +52,18 @@ const props = defineProps<{
 
 const emit = defineEmits(['select', 'delete', 'move'])
 const editorStore = useEditorStore()
+
+const handleSaveAsTemplate = async () => {
+  const name = prompt('Enter a name for this new template:', 'New Block Template')
+  if (!name) return
+  
+  try {
+    await editorStore.saveInstanceAsTemplate(props.block.id, name)
+    alert('Block saved as template successfully!')
+  } catch (error) {
+    alert('Failed to save block as template.')
+  }
+}
 
 const blockName = computed(() => props.block.source_template_id.split('-')[0])
 

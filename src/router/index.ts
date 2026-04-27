@@ -56,6 +56,25 @@ const router = createRouter({
       name: 'login',
       component: () => import('@/modules/auth/components/LoginView.vue'),
       meta: { guestOnly: true }
+    },
+    
+    // Admin Routes
+    {
+      path: '/admin/templates',
+      component: () => import('@/modules/admin/components/TemplateManager/TemplateManager.vue'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: '',
+          name: 'admin-templates',
+          component: () => import('@/modules/admin/components/TemplateManager/TemplateList.vue')
+        },
+        {
+          path: ':id',
+          name: 'admin-template-editor',
+          component: () => import('@/modules/admin/components/TemplateManager/TemplateEditor.vue')
+        }
+      ]
     }
   ],
 })

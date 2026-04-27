@@ -41,5 +41,37 @@ export const templateApi = {
       .eq('id', templateId)
     
     if (error) throw error
+  },
+
+  async getTemplateById(id: string): Promise<BlockTemplate> {
+    const { data, error } = await supabase
+      .from('block_templates')
+      .select('*')
+      .eq('id', id)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async updateTemplate(id: string, updates: Partial<BlockTemplate>): Promise<BlockTemplate> {
+    const { data, error } = await supabase
+      .from('block_templates')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async deleteTemplate(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('block_templates')
+      .delete()
+      .eq('id', id)
+    
+    if (error) throw error
   }
 }

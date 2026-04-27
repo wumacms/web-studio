@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import type { BlockInstance, BlockTemplate } from '@/types/models/block'
 import type { Page } from '@/types/models/site'
 import { blockApi } from '@/api/endpoints/block.api'
+import { templateApi } from '@/api/endpoints/template.api'
 
 export const useEditorStore = defineStore('page-editor', () => {
   const currentPage = ref<Page | null>(null)
@@ -166,6 +167,20 @@ export const useEditorStore = defineStore('page-editor', () => {
     selectedBlockId.value = id
   }
 
+  async function saveInstanceAsTemplate(blockId: string, name: string) {
+    const block = blockInstances.value.find(b => b.id === blockId)
+    if (!block) throw new Error('Block not found')
+
+    await templateApi.createTemplate({
+      name,
+      html_code: block.copied_html_code,
+      schema: block.copied_schema,
+      category: 'General',
+      origin: 'USER',
+      is_published: true
+    })
+  }
+
   function setLocale(locale: string) {
     currentLocale.value = locale
   }
@@ -208,6 +223,7 @@ export const useEditorStore = defineStore('page-editor', () => {
     moveBlock,
     updateBlockProps,
     selectBlock,
+    saveInstanceAsTemplate,
     setLocale,
     setEnabledLocales
   }
