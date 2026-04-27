@@ -7,7 +7,7 @@ export interface BlockTemplate {
   preview_image?: string
   is_published?: boolean
   created_by?: string
-  origin?: 'SYSTEM' | 'USER'
+  origin?: 'SYSTEM' | 'USER' | 'AI'
   created_at?: string
 }
 

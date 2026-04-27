@@ -9,13 +9,22 @@
           Create and manage reusable blocks for your web projects.
         </p>
       </div>
-      <button 
-        @click="$router.push('/admin/templates/new')"
-        class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
-      >
-        <Plus class="w-5 h-5" />
-        New Template
-      </button>
+      <div class="flex gap-4">
+        <button 
+          @click="showAiGenerator = true"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-primary border border-primary/20 font-bold rounded-xl shadow-xl transition-all hover:bg-primary hover:text-white active:scale-95"
+        >
+          <Sparkles class="w-5 h-5" />
+          AI 助手
+        </button>
+        <button 
+          @click="$router.push('/admin/templates/new')"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-xl shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+        >
+          <Plus class="w-5 h-5" />
+          New Template
+        </button>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -85,14 +94,24 @@
         </div>
       </div>
     </div>
+
+    <!-- AI Generator Modal -->
+    <AiTemplateGenerator 
+      v-if="showAiGenerator" 
+      @close="showAiGenerator = false" 
+      @saved="fetchTemplates"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Plus, LayoutTemplate, Edit3, Trash2 } from 'lucide-vue-next'
+import { Plus, LayoutTemplate, Edit3, Trash2, Sparkles } from 'lucide-vue-next'
 import { templateApi } from '@/api/endpoints/template.api'
 import type { BlockTemplate } from '@/types/models/block'
+import AiTemplateGenerator from './AiTemplateGenerator.vue'
+
+const showAiGenerator = ref(false)
 
 const templates = ref<BlockTemplate[]>([])
 const loading = ref(true)
